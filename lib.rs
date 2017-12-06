@@ -272,13 +272,13 @@ fn regression(data: &[(usize, Duration)]) -> (f64, f64) {
     if data.len() < 2 {
         return (f64::NAN, f64::NAN);
     }
-    let data: Vec<(u64, u64)> = data.iter().map(|&(x,y)| (x as u64, as_nanos(y))).collect();
+    let data: Vec<(f64, f64)> = data.iter().map(|&(x,y)| (x as f64, as_nanos(y) as f64)).collect();
     let n = data.len() as f64;
-    let nxbar  = data.iter().map(|&(x,_)| x  ).sum::<u64>(); // iter_time > 5e-11 ns
-    let nybar  = data.iter().map(|&(_,y)| y  ).sum::<u64>(); // TIME_LIMIT < 2 ^ 64 ns
-    let nxxbar = data.iter().map(|&(x,_)| x*x).sum::<u64>(); // num_iters < 13_000_000_000
-    let nyybar = data.iter().map(|&(_,y)| y*y).sum::<u64>(); // TIME_LIMIT < 4.3 e9 ns
-    let nxybar = data.iter().map(|&(x,y)| x*y).sum::<u64>();
+    let nxbar  = data.iter().map(|&(x,_)| x  ).sum::<f64>(); // iter_time > 5e-11 ns
+    let nybar  = data.iter().map(|&(_,y)| y  ).sum::<f64>(); // TIME_LIMIT < 2 ^ 64 ns
+    let nxxbar = data.iter().map(|&(x,_)| x*x).sum::<f64>(); // num_iters < 13_000_000_000
+    let nyybar = data.iter().map(|&(_,y)| y*y).sum::<f64>(); // TIME_LIMIT < 4.3 e9 ns
+    let nxybar = data.iter().map(|&(x,y)| x*y).sum::<f64>();
     let ncovar = nxybar as f64 - ((nxbar * nybar) as f64 / n);
     let nxvar  = nxxbar as f64 - ((nxbar * nxbar) as f64 / n);
     let nyvar  = nyybar as f64 - ((nybar * nybar) as f64 / n);
