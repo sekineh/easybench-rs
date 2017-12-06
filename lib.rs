@@ -198,7 +198,12 @@ impl Display for Stats {
 /// use it. Make sure to return enough information to prevent the optimiser from eliminating code
 /// from your benchmark! (See the module docs for more.)
 pub fn bench<F, O>(f: F) -> Stats where F: Fn() -> O {
-    bench_env((), |_| f() )
+    bench_env_limit((), |_| f(), BENCH_TIME_LIMIT_SECS )
+}
+
+/// bench with the additional argument `limit_secs`
+pub fn bench_limit<F, O>(f: F, limit_secs: u64) -> Stats where F: Fn() -> O {
+    bench_env_limit((), |_| f(), limit_secs)
 }
 
 /// Run a benchmark with an environment.
@@ -221,11 +226,16 @@ pub fn bench<F, O>(f: F) -> Stats where F: Fn() -> O {
 /// nanoseconds. This is a worst-case scenario however, and I haven't actually been able to trigger
 /// it in practice... but it's good to be aware of the possibility.
 pub fn bench_env<F, I, O>(env: I, f: F) -> Stats where F: Fn(&mut I) -> O, I: Clone {
+    bench_env_limit(env, f, BENCH_TIME_LIMIT_SECS)
+}
+
+/// bench with the additional argument `limit_secs`
+pub fn bench_env_limit<F, I, O>(env: I, f: F, limit_secs: u64) -> Stats where F: Fn(&mut I) -> O, I: Clone {
     let mut data = Vec::new();
     let bench_start = Instant::now(); // The time we started the benchmark (not used in results)
 
     // Collect data until BENCH_TIME_LIMIT_SECS is reached.
-    while bench_start.elapsed() < Duration::from_secs(BENCH_TIME_LIMIT_SECS) {
+    while bench_start.elapsed() < Duration::from_secs(limit_secs) {
         let iters = ITER_SCALE_FACTOR.powi(data.len() as i32).round() as usize;
         let mut xs = vec![env.clone();iters]; // Prepare the environments - one per iteration
         let iter_start = Instant::now();      // Start the clock
@@ -341,7 +351,8 @@ mod tests {
 
     #[test]
     fn very_slow() {
-        println!("very slow: {}", bench(|| thread::sleep(Duration::from_millis(400))));
+        println!("very slow         : {}", bench(|| thread::sleep(Duration::from_millis(400))));
+        println!("very slow (10 sec): {}", bench_limit(|| thread::sleep(Duration::from_millis(400)), 10));
     }
 
     #[test]
